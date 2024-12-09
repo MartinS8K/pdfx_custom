@@ -23,10 +23,8 @@ void main() {
   setUpAll(() async {
     testData = Uint8List.fromList(imageBytes);
 
-    const channel = MethodChannel('io.scer.pdf_renderer');
-
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
+    const MethodChannel('io.scer.pdf_renderer')
+        .setMockMethodCallHandler((MethodCall methodCall) async {
       log.add(methodCall);
       switch (methodCall.method) {
         case 'open.document.file':
@@ -171,7 +169,6 @@ void main() {
             'crop_height': null,
             'crop_width': null,
             'quality': 100,
-            'forPrint': false,
           },
         ),
       ]);
