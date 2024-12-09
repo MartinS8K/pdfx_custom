@@ -19,14 +19,6 @@ class PdfControllerPinch extends TransformationController
   /// The page to show when first creating the [PdfViewPinch].
   late int initialPage;
 
-  int? _pendingInitialPage;
-
-  int? get pendingInitialPage {
-    final value = _pendingInitialPage;
-    _pendingInitialPage = null;
-    return value;
-  }
-
   /// The fraction of the viewport that each page should occupy.
   ///
   /// Defaults to 1.0, which means each page fills the viewport in the scrolling
@@ -79,6 +71,11 @@ class PdfControllerPinch extends TransformationController
     try {
       _state?._releasePages();
 
+      if (page != initialPage) {
+        _state?.widget.onPageChanged?.call(initialPage);
+        pageListenable.value = initialPage;
+      }
+
       _document = await documentFuture;
 
       _state!._pages.clear();
@@ -96,10 +93,6 @@ class PdfControllerPinch extends TransformationController
       }
       _state!._firstControllerAttach = true;
       _state!._pages.addAll(pages);
-
-      if (initialPage > 1) {
-        _pendingInitialPage = initialPage;
-      }
 
       loadingState.value = PdfLoadingState.success;
     } catch (error) {

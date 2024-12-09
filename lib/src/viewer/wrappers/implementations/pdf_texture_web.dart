@@ -1,27 +1,24 @@
-import 'dart:js_interop';
-import 'dart:js_interop_unsafe';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pdfx/src/renderer/rgba_data.dart';
-import 'package:pdfx/src/renderer/web/rgba_data.dart';
-import 'package:web/web.dart' as web;
+
+import '../html.dart' as html;
+import '../js_util.dart' as js_util;
 
 class PdfTexture extends StatefulWidget {
   const PdfTexture({
-    super.key,
     required this.textureId,
-  });
-
+    Key? key,
+  }) : super(key: key);
   final int textureId;
 
   @override
   State<PdfTexture> createState() => _PdfTextureState();
 
   RgbaData? get data =>
-      (web.window.getProperty('pdfx_texture_$textureId'.toJS) as JSRgbaData?)
-          ?.toDart;
+      js_util.getProperty(html.window, 'pdfx_texture_$textureId') as RgbaData?;
 }
 
 class _PdfTextureState extends State<PdfTexture> {

@@ -31,29 +31,12 @@ class PdfViewPinch extends StatefulWidget {
     ),
     this.scrollDirection = Axis.vertical,
     this.padding = 10,
-    this.minScale = 1.0,
-    this.maxScale = 20.0,
-    this.backgroundDecoration = const BoxDecoration(
-      color: Color.fromARGB(255, 250, 250, 250),
-      boxShadow: [
-        BoxShadow(
-          color: Color(0x73000000),
-          blurRadius: 4,
-          offset: Offset(2, 2),
-        ),
-      ],
-    ),
+    this.backgroundDecoration = const BoxDecoration(),
     Key? key,
   }) : super(key: key);
 
   /// Padding for the every page.
   final double padding;
-
-  /// The minimum document zoom scale.
-  final double minScale;
-
-  /// The maximum document zoom scale.
-  final double maxScale;
 
   /// Page management
   final PdfControllerPinch controller;
@@ -74,7 +57,7 @@ class PdfViewPinch extends StatefulWidget {
   final Axis scrollDirection;
 
   /// Pdf widget page background decoration
-  final BoxDecoration backgroundDecoration;
+  final BoxDecoration? backgroundDecoration;
 
   /// Default page builder
   @override
@@ -99,8 +82,6 @@ class _PdfViewPinchState extends State<PdfViewPinch>
   bool _forceUpdatePagePreviews = true;
 
   double get _padding => widget.padding;
-  double get _minScale => widget.minScale;
-  double get _maxScale => widget.maxScale;
 
   @override
   void initState() {
@@ -276,16 +257,7 @@ class _PdfViewPinchState extends State<PdfViewPinch>
     if (_lastViewSize == null || _pages.isEmpty) {
       return;
     }
-
-    Matrix4? m;
-    final pendingInitialPage = _controller.pendingInitialPage;
-    bool shouldNotifyPageChanged = false;
-    if (pendingInitialPage != null) {
-      m = _controller.calculatePageFitMatrix(pageNumber: pendingInitialPage);
-      shouldNotifyPageChanged = true;
-    }
-    m ??= _controller.value;
-
+    final m = _controller.value;
     final r = m.row0[0];
     final exposed = Rect.fromLTWH(
         -m.row0[3], -m.row1[3], _lastViewSize!.width, _lastViewSize!.height);
@@ -323,11 +295,6 @@ class _PdfViewPinchState extends State<PdfViewPinch>
     } else {
       _needRealSizeOverlayUpdate();
     }
-
-    if (shouldNotifyPageChanged && pendingInitialPage != null) {
-      widget.onPageChanged?.call(pendingInitialPage);
-      _controller.pageListenable.value = pendingInitialPage;
-    }
   }
 
   void _needReLayout() {
@@ -343,8 +310,7 @@ class _PdfViewPinchState extends State<PdfViewPinch>
       return;
     }
     _forceUpdatePagePreviews = false;
-    for (var i = 0; i < _pages.length; i++) {
-      final page = _pages[i];
+    for (final page in _pages) {
       if (page.rect == null) {
         continue;
       }
@@ -413,14 +379,13 @@ class _PdfViewPinchState extends State<PdfViewPinch>
     const fullPurgeDistThreshold = 33;
     const partialRemovalDistThreshold = 8;
 
-    final dpr = View.of(context).devicePixelRatio;
+    final dpr = MediaQuery.of(context).devicePixelRatio;
     final m = _controller.value;
     final r = m.row0[0];
     final exposed = Rect.fromLTWH(
         -m.row0[3], -m.row1[3], _lastViewSize!.width, _lastViewSize!.height);
     final distBase = max(_lastViewSize!.height, _lastViewSize!.width);
-    for (var i = 0; i < _pages.length; i++) {
-      final page = _pages[i];
+    for (final page in _pages) {
       if (page.rect == null ||
           page.status != _PdfPageLoadingStatus.pageLoaded) {
         continue;
@@ -557,11 +522,9 @@ class _PdfViewPinchState extends State<PdfViewPinch>
           scrollControls: InteractiveViewerScrollControls.scrollPans,
           constrained: false,
           alignPanAxis: false,
-          boundaryMargin: _minScale < 1
-              ? const EdgeInsets.all(double.infinity)
-              : EdgeInsets.zero,
-          minScale: _minScale,
-          maxScale: _maxScale,
+          boundaryMargin: EdgeInsets.zero,
+          minScale: 1.0,
+          maxScale: 20,
           panEnabled: true,
           scaleEnabled: true,
           child: SafeArea(
@@ -585,8 +548,7 @@ class _PdfViewPinchState extends State<PdfViewPinch>
           Rect.fromLTWH(-m.row0[3], -m.row1[3], viewSize.width, viewSize.height)
               .inflate(_padding);
 
-      for (var i = 0; i < _pages.length; i++) {
-        final page = _pages[i];
+      for (final page in _pages) {
         if (page.rect == null) {
           continue;
         }
@@ -606,7 +568,16 @@ class _PdfViewPinchState extends State<PdfViewPinch>
           child: Container(
             width: page.rect!.width,
             height: page.rect!.height,
-            decoration: widget.backgroundDecoration,
+            decoration: const BoxDecoration(
+              color: Color.fromARGB(255, 250, 250, 250),
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0x73000000),
+                  blurRadius: 4,
+                  offset: Offset(2, 2),
+                ),
+              ],
+            ),
             child: Stack(
               children: [
                 ValueListenableBuilder<int>(

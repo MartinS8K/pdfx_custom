@@ -221,6 +221,5 @@ class _PdfViewState extends State<PdfView> {
         scrollDirection: widget.scrollDirection,
         reverse: widget.reverse,
         scrollPhysics: widget.physics,
-        pageSnapping: widget.pageSnapping,
       );
 }
