@@ -24,6 +24,7 @@ void main() {
     testData = Uint8List.fromList(imageBytes);
 
     const MethodChannel('io.scer.pdf_renderer')
+        // ignore: deprecated_member_use
         .setMockMethodCallHandler((MethodCall methodCall) async {
       log.add(methodCall);
       switch (methodCall.method) {
